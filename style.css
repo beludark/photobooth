@@ -25,6 +25,16 @@ body{
 
 .hidden{ display:none !important; }
 
+.login-gate{
+  min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+}
+.login-card{ max-width:380px; width:100%; text-align:center; }
+.login-card .hero-title{ font-size:34px; margin-bottom:2px; }
+.login-card .hero-sub{ margin-bottom:22px; }
+.topbar-right{ display:flex; align-items:center; gap:10px; }
+
 #app{ max-width:900px; margin:0 auto; padding: 20px 18px 60px; }
 
 .topbar{
