@@ -6,7 +6,8 @@ const Editor = {
   layoutRects: [],
   canvasW: 0,
   canvasH: 0,
-  drag: null, // { index, offsetX, offsetY }
+  drag: null, // { index, offsetX, offsetY, moved, startX, startY }
+  _longPressTimer: null,
 
   init(canvasEl) {
     this.canvas = canvasEl;
@@ -102,11 +103,24 @@ const Editor = {
     ctx.restore();
   },
 
+  // Full pipeline: (re)load images once, then paint. Use only when entering
+  // the edit screen — NOT on every sticker move / keystroke, or it hammers
+  // image decoding on every frame and freezes weaker phones.
   async render() {
     if (document.fonts && document.fonts.load) {
       try { await document.fonts.load('700 30px Gaegu'); } catch (e) {}
     }
     await this.loadSelectedImages();
+    this._paint();
+  },
+
+  // Fast redraw using already-loaded images — safe to call on every
+  // pointermove / keystroke / remote update.
+  redraw() {
+    this._paint();
+  },
+
+  _paint() {
     this.computeLayout();
     const canvas = this.canvas, ctx = this.ctx;
     canvas.width = this.canvasW;
@@ -147,7 +161,7 @@ const Editor = {
       ctx.fillStyle = isDark ? '#fff' : '#3B2A46';
       ctx.font = '700 22px Gaegu, cursive';
       ctx.textAlign = 'center';
-      ctx.fillText(AppState.customText, canvas.width / 2, canvas.height - (AppState.customText ? 40 : 16));
+      ctx.fillText(AppState.customText, canvas.width / 2, canvas.height - 40);
     }
 
     ctx.fillStyle = isDark ? '#f0e6fa' : '#6b5a78';
@@ -188,28 +202,49 @@ const Editor = {
     const { x, y } = this._pointerPos(e);
     const hit = this._hitSticker(x, y);
     if (hit !== -1) {
-      this.drag = { index: hit, offsetX: x - AppState.stickers[hit].x, offsetY: y - AppState.stickers[hit].y };
+      this.drag = {
+        index: hit,
+        offsetX: x - AppState.stickers[hit].x,
+        offsetY: y - AppState.stickers[hit].y,
+        moved: false, startX: x, startY: y,
+      };
       this.canvas.setPointerCapture(e.pointerId);
+      // long-press (~550ms) without moving deletes the sticker — a mobile-friendly
+      // alternative to double-click, which doesn't fire reliably on touch.
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = setTimeout(() => {
+        if (this.drag && !this.drag.moved) {
+          AppState.stickers.splice(this.drag.index, 1);
+          this.drag = null;
+          this._broadcastStickers();
+          this.redraw();
+        }
+      }, 550);
       return;
     }
     if (this.selectedEmoji) {
       AppState.stickers.push({ id: uid(), emoji: this.selectedEmoji, x, y, size: 40 });
       this._broadcastStickers();
-      this.render();
+      this.redraw();
     }
   },
 
   _onPointerMove(e) {
     if (!this.drag) return;
     const { x, y } = this._pointerPos(e);
+    if (Math.hypot(x - this.drag.startX, y - this.drag.startY) > 6) {
+      this.drag.moved = true;
+      clearTimeout(this._longPressTimer);
+    }
     const st = AppState.stickers[this.drag.index];
     if (!st) return;
     st.x = x - this.drag.offsetX;
     st.y = y - this.drag.offsetY;
-    this.render();
+    this.redraw();
   },
 
   _onPointerUp() {
+    clearTimeout(this._longPressTimer);
     if (this.drag) {
       this.drag = null;
       this._broadcastStickers();
@@ -222,7 +257,7 @@ const Editor = {
     if (hit !== -1) {
       AppState.stickers.splice(hit, 1);
       this._broadcastStickers();
-      this.render();
+      this.redraw();
     }
   },
 
@@ -233,25 +268,25 @@ const Editor = {
     e.preventDefault();
     const st = AppState.stickers[hit];
     st.size = Math.max(16, Math.min(120, st.size - Math.sign(e.deltaY) * 4));
-    this.render();
+    this.redraw();
     this._broadcastStickers();
   },
 
   clearAll() {
     AppState.stickers = [];
     this._broadcastStickers();
-    this.render();
+    this.redraw();
   },
 
   setCustomText(text) {
     AppState.customText = text.slice(0, 40);
     PeerNet.send({ type: 'custom-text', text: AppState.customText });
-    this.render();
+    this.redraw();
   },
 
   applyRemoteCustomText(text) {
     AppState.customText = text;
-    this.render();
+    this.redraw();
   },
 
   _broadcastStickers() {
@@ -260,7 +295,7 @@ const Editor = {
 
   applyRemoteStickers(stickers) {
     AppState.stickers = stickers;
-    this.render();
+    this.redraw();
   },
 
   toBlob() {
@@ -272,17 +307,24 @@ const Editor = {
     link.download = `photobooth-${AppState.roomCode || 'nous'}.png`;
     link.href = this.canvas.toDataURL('image/png');
     link.click();
-    if (window.History) History.save(this.canvas.toDataURL('image/png'));
+    if (window.History) {
+      try { History.save(this.canvas.toDataURL('image/png')); } catch (e) { console.error('history save failed', e); }
+    }
   },
 
   async share() {
-    if (!navigator.share) return false;
+    if (!navigator.share) throw new Error('unsupported');
+    const blob = await this.toBlob();
+    const file = new File([blob], `photobooth-${AppState.roomCode || 'nous'}.png`, { type: 'image/png' });
+    if (navigator.canShare && !navigator.canShare({ files: [file] })) throw new Error('unsupported');
+    await navigator.share({ files: [file], title: 'Notre bande photobooth', text: 'On s\'est pris en photo à distance ✨' });
+  },
+
+  supportsFileShare() {
+    if (!navigator.share || !navigator.canShare) return false;
     try {
-      const blob = await this.toBlob();
-      const file = new File([blob], `photobooth-${AppState.roomCode || 'nous'}.png`, { type: 'image/png' });
-      if (navigator.canShare && !navigator.canShare({ files: [file] })) return false;
-      await navigator.share({ files: [file], title: 'Notre bande photobooth', text: 'On s\'est pris en photo à distance ✨' });
-      return true;
+      const testFile = new File([new Blob(['x'], { type: 'image/png' })], 'test.png', { type: 'image/png' });
+      return navigator.canShare({ files: [testFile] });
     } catch (e) {
       return false;
     }
