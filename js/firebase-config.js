@@ -5,13 +5,14 @@
 //    pour enregistrer une app web, puis copie l'objet de config ici en dessous.
 
 const firebaseConfig = {
-  apiKey: "REMPLACE_MOI",
-  authDomain: "REMPLACE_MOI.firebaseapp.com",
-  projectId: "REMPLACE_MOI",
-  storageBucket: "REMPLACE_MOI.appspot.com",
-  messagingSenderId: "REMPLACE_MOI",
-  appId: "REMPLACE_MOI",
-};
+    apiKey: "AIzaSyDQma6AkM5ZzVhlkJA4dPL3lxmfC-ptmTI",
+    authDomain: "photobooth-f925c.firebaseapp.com",
+    projectId: "photobooth-f925c",
+    storageBucket: "photobooth-f925c.firebasestorage.app",
+    messagingSenderId: "89265043548",
+    appId: "1:89265043548:web:1c11bafe427089e4380e99",
+    measurementId: "G-4CCYT3VLPC"
+  };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
