@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderStickerPalette();
     document.getElementById('stripTextInput').value = AppState.customText || '';
     const shareBtn = document.getElementById('btnShare');
-    shareBtn.classList.toggle('hidden', !navigator.share);
+    shareBtn.classList.toggle('hidden', !Editor.supportsFileShare());
     Editor.render();
   }
 
