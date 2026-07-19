@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>둘의 부스 — Photobooth à deux</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Poppins:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <div class="logo">둘의 부스 <span class="logo-sub">two-cut booth</span></div>
+    <div id="connStatus" class="conn-badge hidden"></div>
+  </header>
+
+  <main>
+
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <div class="film-card">
+        <h1 class="hero-title">Prenez-vous en photo,<br>même à distance.</h1>
+        <p class="hero-sub">Crée une salle, envoie le lien à ta copine, souriez ensemble. Chaque salle est unique et limitée à deux personnes.</p>
+
+        <div class="home-actions">
+          <div class="action-block">
+            <h2>Créer une salle</h2>
+            <p class="hint">Tu deviens l'hôte, tu lances la séance.</p>
+            <button id="btnCreateRoom" class="btn btn-primary">Créer ma salle</button>
+          </div>
+          <div class="divider-or">ou</div>
+          <div class="action-block">
+            <h2>Rejoindre une salle</h2>
+            <p class="hint">Colle le code reçu par ta moitié.</p>
+            <input id="joinCodeInput" class="input-code" placeholder="ex : LUNE-42" maxlength="12" />
+            <button id="btnJoinRoom" class="btn btn-secondary">Rejoindre</button>
+          </div>
+        </div>
+        <p id="homeError" class="error-text hidden"></p>
+      </div>
+    </section>
+
+    <!-- WAITING -->
+    <section id="screen-waiting" class="screen">
+      <div class="film-card">
+        <h2 class="section-title">Salle <span id="roomCodeDisplay" class="room-code"></span></h2>
+        <p class="hint">Partage ce lien avec ta copine :</p>
+        <div class="share-row">
+          <input id="shareLink" class="input-code" readonly />
+          <button id="btnCopyLink" class="btn btn-small">Copier</button>
+        </div>
+
+        <div class="video-pair">
+          <div class="video-slot">
+            <video id="localVideo" autoplay playsinline muted></video>
+            <span class="video-label">Toi</span>
+          </div>
+          <div class="video-slot">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <span id="remotePlaceholder" class="video-placeholder">En attente de connexion…</span>
+            <span class="video-label">Elle</span>
+          </div>
+        </div>
+
+        <button id="btnGoSetup" class="btn btn-primary hidden">On y va →</button>
+        <p id="waitingHint" class="hint center">En attente que ta copine se connecte…</p>
+      </div>
+    </section>
+
+    <!-- SETUP -->
+    <section id="screen-setup" class="screen">
+      <div class="film-card">
+        <h2 class="section-title">Choisissez votre format</h2>
+
+        <div class="option-group">
+          <h3>Format de bande</h3>
+          <div id="formatOptions" class="option-row"></div>
+        </div>
+
+        <div class="option-group">
+          <h3>Couleur du cadre</h3>
+          <div id="frameOptions" class="option-row"></div>
+        </div>
+
+        <div class="option-group">
+          <h3>Filtre</h3>
+          <div id="filterOptions" class="option-row"></div>
+        </div>
+
+        <button id="btnStartSequence" class="btn btn-primary">Démarrer la séance 📸</button>
+        <p class="hint center">Les deux écrans se synchronisent automatiquement.</p>
+      </div>
+    </section>
+
+    <!-- CAPTURE -->
+    <section id="screen-capture" class="screen">
+      <div class="film-card capture-card">
+        <div class="capture-progress"><span id="captureProgress">Photo 1 / 6</span></div>
+        <div class="video-pair capture-videos">
+          <div class="video-slot">
+            <video id="localVideo2" autoplay playsinline muted></video>
+          </div>
+          <div class="video-slot">
+            <video id="remoteVideo2" autoplay playsinline></video>
+          </div>
+        </div>
+        <div id="countdownOverlay" class="countdown-overlay hidden">
+          <span id="countdownNumber">3</span>
+        </div>
+        <div id="restOverlay" class="rest-overlay hidden">
+          <span id="restText">Préparez la prochaine pose…</span>
+        </div>
+        <div id="flashOverlay" class="flash-overlay"></div>
+      </div>
+    </section>
+
+    <!-- SELECT -->
+    <section id="screen-select" class="screen">
+      <div class="film-card">
+        <h2 class="section-title">Choisissez vos <span id="keepCountLabel"></span> préférées</h2>
+        <p class="hint center" id="selectHint"></p>
+        <div id="photoGrid" class="photo-grid"></div>
+        <button id="btnGoEdit" class="btn btn-primary" disabled>Continuer →</button>
+      </div>
+    </section>
+
+    <!-- EDIT -->
+    <section id="screen-edit" class="screen">
+      <div class="film-card edit-card">
+        <h2 class="section-title">Décorez votre bande</h2>
+        <div class="edit-layout">
+          <div class="edit-canvas-wrap">
+            <canvas id="finalCanvas"></canvas>
+          </div>
+          <div class="sticker-panel">
+            <h3>Stickers</h3>
+            <div id="stickerPalette" class="sticker-palette"></div>
+            <p class="hint">Clique un sticker, puis clique sur la bande pour le poser. Clique un sticker déjà posé pour le retirer.</p>
+            <button id="btnClearStickers" class="btn btn-small">Tout effacer</button>
+          </div>
+        </div>
+        <div class="edit-actions">
+          <button id="btnRestart" class="btn btn-secondary">Nouvelle séance</button>
+          <button id="btnDownload" class="btn btn-primary">Télécharger 💾</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <canvas id="workCanvas" class="hidden"></canvas>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="js/state.js"></script>
+<script src="js/peer.js"></script>
+<script src="js/booth.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
