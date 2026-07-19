@@ -24,6 +24,7 @@ const PeerNet = {
     onRemoteStream: null,
     onPeerConnected: null,
     onPeerDisconnected: null,
+    onConnStateChange: null,
     onMessage: null,
     onError: null,
     onRoomFull: null,
@@ -45,6 +46,7 @@ const PeerNet = {
       if (this.handlers.onRemoteStream) this.handlers.onRemoteStream(event.streams[0]);
     };
     pc.onconnectionstatechange = () => {
+      if (this.handlers.onConnStateChange) this.handlers.onConnStateChange(pc.connectionState);
       if (pc.connectionState === 'connected' && !this.connectedFired) {
         this.connectedFired = true;
         AppState.connected = true;
