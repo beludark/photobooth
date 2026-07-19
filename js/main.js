@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const screens = {};
   document.querySelectorAll('.screen').forEach(s => screens[s.id] = s);
+  let screenBeforeHistory = 'screen-home';
+
   function showScreen(id) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[id].classList.add('active');
@@ -9,9 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const connStatus = document.getElementById('connStatus');
-  function setConnStatus(text) {
-    connStatus.textContent = text;
+  const connDot = document.getElementById('connDot');
+  const connText = document.getElementById('connText');
+  function setConnState(state) {
     connStatus.classList.remove('hidden');
+    connDot.className = 'conn-dot';
+    if (state === 'connected') { connDot.classList.add('dot-green'); connText.textContent = 'Connecté(e)'; }
+    else if (state === 'connecting' || state === 'new' || state === 'checking') { connDot.classList.add('dot-orange'); connText.textContent = 'Connexion…'; }
+    else { connDot.classList.add('dot-red'); connText.textContent = 'Déconnecté(e)'; }
   }
 
   // ---------- HOME ----------
@@ -68,8 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
     remoteVideo2.srcObject = stream;
     remotePlaceholder.classList.add('hidden');
   };
+  PeerNet.handlers.onConnStateChange = (state) => setConnState(state);
   PeerNet.handlers.onPeerConnected = () => {
-    setConnStatus('Connecté(e) ✓');
     if (AppState.role === 'host') {
       btnGoSetup.classList.remove('hidden');
       waitingHint.textContent = 'Ta copine est connectée. Quand vous êtes prêtes, on y va !';
@@ -78,7 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   PeerNet.handlers.onPeerDisconnected = () => {
-    setConnStatus('Déconnecté(e)');
     remotePlaceholder.textContent = "La connexion a été coupée.";
     remotePlaceholder.classList.remove('hidden');
     btnGoSetup.classList.add('hidden');
@@ -93,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     switch (msg.type) {
       case 'goto-setup': showScreen('screen-setup'); renderSetupOptions(); break;
       case 'settings': AppState.settings = msg.settings; renderSetupOptions(); break;
-      case 'sequence-init': case 'tick': case 'flash': case 'photo': case 'rest': case 'sequence-done':
+      case 'sequence-init': case 'retake-init': case 'tick': case 'flash': case 'photo': case 'rest': case 'sequence-done':
         if (!Booth.isDriver) {
           if (AppState.step !== 'screen-capture') showScreen('screen-capture');
           Booth.handleRemoteEvent(msg);
@@ -108,6 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
       case 'stickers':
         Editor.applyRemoteStickers(msg.stickers);
+        break;
+      case 'custom-text':
+        Editor.applyRemoteCustomText(msg.text);
+        document.getElementById('stripTextInput').value = msg.text;
         break;
       case 'restart':
         resetCreativeState();
@@ -145,10 +155,21 @@ document.addEventListener('DOMContentLoaded', () => {
     items.forEach(item => {
       const chip = document.createElement('div');
       chip.className = 'option-chip' + (item.id === currentId ? ' selected' : '');
-      if (item.color) {
+      if (item.color && !item.gradient) {
         const sw = document.createElement('span');
         sw.className = 'swatch';
         sw.style.background = item.color;
+        chip.appendChild(sw);
+      } else if (item.gradient) {
+        const sw = document.createElement('span');
+        sw.className = 'swatch';
+        sw.style.background = `linear-gradient(135deg, ${item.gradient[0]}, ${item.gradient[1]})`;
+        chip.appendChild(sw);
+      } else if (item.pattern) {
+        const sw = document.createElement('span');
+        sw.className = 'swatch';
+        sw.style.background = item.color;
+        sw.textContent = '';
         chip.appendChild(sw);
       }
       chip.appendChild(document.createTextNode(item.label));
@@ -167,13 +188,12 @@ document.addEventListener('DOMContentLoaded', () => {
     chipRow(document.getElementById('filterOptions'), FILTERS, AppState.settings.filterId, (id) => {
       AppState.settings.filterId = id; broadcastSettings(); renderSetupOptions();
     });
+    chipRow(document.getElementById('countdownOptions'), COUNTDOWN_OPTIONS, AppState.settings.countdownId, (id) => {
+      AppState.settings.countdownId = id; broadcastSettings(); renderSetupOptions();
+    });
 
     const startBtn = document.getElementById('btnStartSequence');
-    if (AppState.role === 'guest') {
-      startBtn.classList.add('hidden');
-    } else {
-      startBtn.classList.remove('hidden');
-    }
+    startBtn.classList.toggle('hidden', AppState.role === 'guest');
   }
 
   function broadcastSettings() {
@@ -195,8 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   Booth.init({ localVideoEl: localVideo2, remoteVideoEl: remoteVideo2 });
 
-  Booth.onProgress = (index, total) => {
-    captureProgress.textContent = `Photo ${Math.min(index + 1, total)} / ${total}`;
+  Booth.onProgress = (index, total, isRetake) => {
+    captureProgress.textContent = isRetake
+      ? `Reprise de la photo ${index + 1}`
+      : `Photo ${Math.min(index + 1, total)} / ${total}`;
   };
   Booth.onCountdown = (n) => {
     if (n == null) { countdownOverlay.classList.add('hidden'); return; }
@@ -227,8 +249,13 @@ document.addEventListener('DOMContentLoaded', () => {
     AppState.photos.forEach((url, i) => {
       const div = document.createElement('div');
       div.className = 'photo-thumb' + (AppState.selectedIndices.includes(i) ? ' selected' : '');
-      div.innerHTML = `<img src="${url}"><span class="check">✓</span>`;
-      div.addEventListener('click', () => toggleSelect(i));
+      div.innerHTML = `<img src="${url}"><span class="check">✓</span><button class="retake-btn" type="button">🔄 Reprendre</button>`;
+      div.querySelector('img').addEventListener('click', () => toggleSelect(i));
+      div.querySelector('.retake-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        showScreen('screen-capture');
+        Booth.runRetake(i);
+      });
       grid.appendChild(div);
     });
     const hint = document.getElementById('selectHint');
@@ -259,6 +286,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function enterEditScreen() {
     showScreen('screen-edit');
     renderStickerPalette();
+    document.getElementById('stripTextInput').value = AppState.customText || '';
+    const shareBtn = document.getElementById('btnShare');
+    shareBtn.classList.toggle('hidden', !navigator.share);
     Editor.render();
   }
 
@@ -279,6 +309,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btnClearStickers').addEventListener('click', () => Editor.clearAll());
   document.getElementById('btnDownload').addEventListener('click', () => Editor.download());
+  document.getElementById('btnShare').addEventListener('click', async () => {
+    const ok = await Editor.share();
+    if (!ok) Editor.download();
+  });
+
+  let textDebounce = null;
+  document.getElementById('stripTextInput').addEventListener('input', (e) => {
+    clearTimeout(textDebounce);
+    textDebounce = setTimeout(() => Editor.setCustomText(e.target.value), 200);
+  });
 
   document.getElementById('btnRestart').addEventListener('click', () => {
     PeerNet.send({ type: 'restart' });
@@ -291,6 +331,21 @@ document.addEventListener('DOMContentLoaded', () => {
     AppState.photos = [];
     AppState.selectedIndices = [];
     AppState.stickers = [];
+    AppState.customText = '';
   }
+
+  // ---------- HISTORY ----------
+  document.getElementById('btnHistory').addEventListener('click', () => {
+    screenBeforeHistory = AppState.step;
+    showScreen('screen-history');
+    History.render(document.getElementById('historyGrid'));
+  });
+  document.getElementById('btnHistoryBack').addEventListener('click', () => {
+    showScreen(screenBeforeHistory);
+  });
+  document.getElementById('btnHistoryClear').addEventListener('click', () => {
+    History.clear();
+    History.render(document.getElementById('historyGrid'));
+  });
 
 });
