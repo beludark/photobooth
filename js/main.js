@@ -310,8 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnClearStickers').addEventListener('click', () => Editor.clearAll());
   document.getElementById('btnDownload').addEventListener('click', () => Editor.download());
   document.getElementById('btnShare').addEventListener('click', async () => {
-    const ok = await Editor.share();
-    if (!ok) Editor.download();
+    try {
+      await Editor.share();
+    } catch (e) {
+      if (e.name === 'AbortError') return; // fermeture volontaire du menu de partage
+      console.error('share failed', e);
+      Editor.download();
+    }
   });
 
   let textDebounce = null;
