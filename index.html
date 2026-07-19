@@ -26,7 +26,11 @@
   <header class="topbar">
     <div class="logo">둘의 부스 <span class="logo-sub">two-cut booth</span></div>
     <div class="topbar-right">
-      <div id="connStatus" class="conn-badge hidden"></div>
+      <button id="btnHistory" class="btn btn-small" title="Historique">📖 Historique</button>
+      <div id="connStatus" class="conn-badge hidden">
+        <span id="connDot" class="conn-dot"></span>
+        <span id="connText"></span>
+      </div>
       <button id="btnLogout" class="btn btn-small">Se déconnecter</button>
     </div>
   </header>
@@ -104,6 +108,11 @@
           <div id="filterOptions" class="option-row"></div>
         </div>
 
+        <div class="option-group">
+          <h3>Décompte</h3>
+          <div id="countdownOptions" class="option-row"></div>
+        </div>
+
         <button id="btnStartSequence" class="btn btn-primary">Démarrer la séance 📸</button>
         <p class="hint center">Les deux écrans se synchronisent automatiquement.</p>
       </div>
@@ -119,6 +128,10 @@
           </div>
           <div class="video-slot">
             <video id="remoteVideo2" autoplay playsinline></video>
+          </div>
+          <div class="pose-guides">
+            <div class="pose-guide"></div>
+            <div class="pose-guide"></div>
           </div>
         </div>
         <div id="countdownOverlay" class="countdown-overlay hidden">
@@ -150,15 +163,31 @@
             <canvas id="finalCanvas"></canvas>
           </div>
           <div class="sticker-panel">
+            <h3>Message (optionnel)</h3>
+            <input id="stripTextInput" class="input-code" placeholder="Un petit mot..." maxlength="40" />
             <h3>Stickers</h3>
             <div id="stickerPalette" class="sticker-palette"></div>
-            <p class="hint">Clique un sticker, puis clique sur la bande pour le poser. Clique un sticker déjà posé pour le retirer.</p>
+            <p class="hint">Clique un sticker puis clique sur la bande pour le poser. Glisse pour déplacer, molette pour redimensionner, double-clique pour retirer.</p>
             <button id="btnClearStickers" class="btn btn-small">Tout effacer</button>
           </div>
         </div>
         <div class="edit-actions">
           <button id="btnRestart" class="btn btn-secondary">Nouvelle séance</button>
+          <button id="btnShare" class="btn btn-small hidden">Partager</button>
           <button id="btnDownload" class="btn btn-primary">Télécharger 💾</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section id="screen-history" class="screen">
+      <div class="film-card">
+        <h2 class="section-title">Vos bandes précédentes</h2>
+        <p class="hint center">Enregistrées uniquement dans ce navigateur, sur cet appareil.</p>
+        <div id="historyGrid" class="history-grid"></div>
+        <div class="edit-actions">
+          <button id="btnHistoryClear" class="btn btn-small">Tout effacer</button>
+          <button id="btnHistoryBack" class="btn btn-primary">← Retour</button>
         </div>
       </div>
     </section>
@@ -176,6 +205,7 @@
 <script src="js/peer.js"></script>
 <script src="js/booth.js"></script>
 <script src="js/editor.js"></script>
+<script src="js/history.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/main.js"></script>
 </body>
