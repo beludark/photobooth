@@ -30,20 +30,20 @@ const History = {
     const items = this.load();
     container.innerHTML = '';
     if (items.length === 0) {
-      container.innerHTML = '<p class="hint center">Aucune bande enregistrée pour l\'instant. Elles apparaissent ici dès que vous en téléchargez une.</p>';
+      container.innerHTML = `<p class="hint center">${t('history.empty')}</p>`;
       return;
     }
     items.forEach(it => {
       const card = document.createElement('div');
       card.className = 'history-card';
-      const dateStr = new Date(it.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const dateStr = new Date(it.date).toLocaleDateString(currentLang === 'kr' ? 'ko-KR' : 'fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       card.innerHTML = `
-        <img src="${it.dataUrl}" alt="Bande du ${dateStr}">
+        <img src="${it.dataUrl}" alt="${dateStr}">
         <div class="history-meta">
           <span>${dateStr}</span>
           <div class="history-actions">
-            <button class="btn-small history-download">Télécharger</button>
-            <button class="btn-small history-delete">Supprimer</button>
+            <button class="btn-small history-download">${t('history.download')}</button>
+            <button class="btn-small history-delete">${t('history.delete')}</button>
           </div>
         </div>`;
       card.querySelector('.history-download').addEventListener('click', () => {
