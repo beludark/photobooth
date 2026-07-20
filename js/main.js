@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const screens = {};
   document.querySelectorAll('.screen').forEach(s => screens[s.id] = s);
   let screenBeforeHistory = 'screen-home';
+  let lastConnState = null;
 
   function showScreen(id) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
@@ -14,11 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const connDot = document.getElementById('connDot');
   const connText = document.getElementById('connText');
   function setConnState(state) {
+    lastConnState = state;
     connStatus.classList.remove('hidden');
     connDot.className = 'conn-dot';
-    if (state === 'connected') { connDot.classList.add('dot-green'); connText.textContent = 'Connecté(e)'; }
-    else if (state === 'connecting' || state === 'new' || state === 'checking') { connDot.classList.add('dot-orange'); connText.textContent = 'Connexion…'; }
-    else { connDot.classList.add('dot-red'); connText.textContent = 'Déconnecté(e)'; }
+    if (state === 'connected') { connDot.classList.add('dot-green'); connText.textContent = t('conn.connected'); }
+    else if (state === 'connecting' || state === 'new' || state === 'checking') { connDot.classList.add('dot-orange'); connText.textContent = t('conn.connecting'); }
+    else { connDot.classList.add('dot-red'); connText.textContent = t('conn.disconnected'); }
   }
 
   // ---------- HOME ----------
@@ -39,20 +41,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const code = await PeerNet.createRoom();
       enterWaitingRoom(code);
     } catch (e) {
-      showHomeError("Impossible de créer la salle. Vérifie l'accès à ta caméra et réessaie.");
+      showHomeError(t('home.errorCameraCreate'));
     }
   });
 
   document.getElementById('btnJoinRoom').addEventListener('click', async () => {
     homeError.classList.add('hidden');
     const code = document.getElementById('joinCodeInput').value.trim();
-    if (!code) { showHomeError('Entre le code de la salle.'); return; }
+    if (!code) { showHomeError(t('home.errorEmptyCode')); return; }
     try {
       await PeerNet.joinRoom(code);
       enterWaitingRoom(code.toUpperCase());
     } catch (e) {
       if (e.message !== 'full') {
-        showHomeError("Salle introuvable. Vérifie le code ou demande un nouveau lien.");
+        showHomeError(t('home.errorNotFound'));
       }
     }
   });
@@ -79,21 +81,21 @@ document.addEventListener('DOMContentLoaded', () => {
   PeerNet.handlers.onPeerConnected = () => {
     if (AppState.role === 'host') {
       btnGoSetup.classList.remove('hidden');
-      waitingHint.textContent = 'Ta copine est connectée. Quand vous êtes prêtes, on y va !';
+      waitingHint.textContent = t('waiting.hintHostReady');
     } else {
-      waitingHint.textContent = "Connectée ! En attente que l'hôte démarre…";
+      waitingHint.textContent = t('waiting.hintGuestReady');
     }
   };
   PeerNet.handlers.onPeerDisconnected = () => {
-    remotePlaceholder.textContent = "La connexion a été coupée.";
+    remotePlaceholder.textContent = t('waiting.hintDisconnected');
     remotePlaceholder.classList.remove('hidden');
     btnGoSetup.classList.add('hidden');
   };
   PeerNet.handlers.onRoomFull = () => {
-    showHomeError('Cette salle est déjà complète (2 personnes maximum).');
+    showHomeError(t('home.errorFull'));
   };
   PeerNet.handlers.onError = () => {
-    showHomeError('Une erreur de connexion est survenue. Réessaie.');
+    showHomeError(t('home.errorGeneric'));
   };
   PeerNet.handlers.onMessage = (msg) => {
     switch (msg.type) {
@@ -139,8 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
     input.select();
     navigator.clipboard?.writeText(input.value);
     const btn = document.getElementById('btnCopyLink');
-    const old = btn.textContent; btn.textContent = 'Copié !';
-    setTimeout(() => btn.textContent = old, 1500);
+    const old = btn.textContent; btn.textContent = t('waiting.copied');
+    setTimeout(() => btn.textContent = t('waiting.copy'), 1500);
   });
 
   document.getElementById('btnGoSetup').addEventListener('click', () => {
@@ -150,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------- SETUP ----------
-  function chipRow(container, items, currentId, onPick) {
+  function chipRow(container, items, currentId, i18nPrefix, onPick) {
     container.innerHTML = '';
     items.forEach(item => {
       const chip = document.createElement('div');
@@ -169,26 +171,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const sw = document.createElement('span');
         sw.className = 'swatch';
         sw.style.background = item.color;
-        sw.textContent = '';
         chip.appendChild(sw);
       }
-      chip.appendChild(document.createTextNode(item.label));
+      chip.appendChild(document.createTextNode(t(`${i18nPrefix}.${item.id}`)));
       chip.addEventListener('click', () => onPick(item.id));
       container.appendChild(chip);
     });
   }
 
   function renderSetupOptions() {
-    chipRow(document.getElementById('formatOptions'), FORMATS, AppState.settings.formatId, (id) => {
+    chipRow(document.getElementById('formatOptions'), FORMATS, AppState.settings.formatId, 'formats', (id) => {
       AppState.settings.formatId = id; broadcastSettings(); renderSetupOptions();
     });
-    chipRow(document.getElementById('frameOptions'), FRAMES, AppState.settings.frameId, (id) => {
+    chipRow(document.getElementById('frameOptions'), FRAMES, AppState.settings.frameId, 'frames', (id) => {
       AppState.settings.frameId = id; broadcastSettings(); renderSetupOptions();
     });
-    chipRow(document.getElementById('filterOptions'), FILTERS, AppState.settings.filterId, (id) => {
+    chipRow(document.getElementById('filterOptions'), FILTERS, AppState.settings.filterId, 'filters', (id) => {
       AppState.settings.filterId = id; broadcastSettings(); renderSetupOptions();
     });
-    chipRow(document.getElementById('countdownOptions'), COUNTDOWN_OPTIONS, AppState.settings.countdownId, (id) => {
+    chipRow(document.getElementById('countdownOptions'), COUNTDOWN_OPTIONS, AppState.settings.countdownId, 'countdowns', (id) => {
       AppState.settings.countdownId = id; broadcastSettings(); renderSetupOptions();
     });
 
@@ -212,30 +213,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const restOverlay = document.getElementById('restOverlay');
   const restText = document.getElementById('restText');
   const flashOverlay = document.getElementById('flashOverlay');
+  const previewOverlay = document.getElementById('previewOverlay');
+  const previewImg = document.getElementById('previewImg');
 
   Booth.init({ localVideoEl: localVideo2, remoteVideoEl: remoteVideo2 });
 
   Booth.onProgress = (index, total, isRetake) => {
     captureProgress.textContent = isRetake
-      ? `Reprise de la photo ${index + 1}`
-      : `Photo ${Math.min(index + 1, total)} / ${total}`;
+      ? t('capture.retakeProgress', { i: index + 1 })
+      : t('capture.photoProgress', { i: Math.min(index + 1, total), n: total });
   };
   Booth.onCountdown = (n) => {
     if (n == null) { countdownOverlay.classList.add('hidden'); return; }
+    previewOverlay.classList.add('hidden');
     countdownOverlay.classList.remove('hidden');
     countdownNumber.textContent = n;
   };
   Booth.onRest = (s) => {
     if (s == null) { restOverlay.classList.add('hidden'); return; }
+    previewOverlay.classList.add('hidden');
     restOverlay.classList.remove('hidden');
-    restText.textContent = `Prochaine pose dans ${s}…`;
+    restText.textContent = t('capture.restText', { s });
   };
   Booth.onFlash = () => {
     flashOverlay.classList.remove('flashing');
     void flashOverlay.offsetWidth;
     flashOverlay.classList.add('flashing');
   };
+  Booth.onPreview = (dataUrl) => {
+    previewImg.src = dataUrl;
+    previewOverlay.classList.remove('hidden');
+  };
   Booth.onDone = () => {
+    previewOverlay.classList.add('hidden');
     showScreen('screen-select');
     renderPhotoGrid();
   };
@@ -243,13 +253,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- SELECT ----------
   function renderPhotoGrid() {
     const format = currentFormat();
-    document.getElementById('keepCountLabel').textContent = format.keep;
+    document.getElementById('selectTitle').textContent = t('select.title', { n: format.keep });
     const grid = document.getElementById('photoGrid');
     grid.innerHTML = '';
     AppState.photos.forEach((url, i) => {
       const div = document.createElement('div');
       div.className = 'photo-thumb' + (AppState.selectedIndices.includes(i) ? ' selected' : '');
-      div.innerHTML = `<img src="${url}"><span class="check">✓</span><button class="retake-btn" type="button">🔄 Reprendre</button>`;
+      div.innerHTML = `<img src="${url}"><span class="check">✓</span><button class="retake-btn" type="button">${t('select.retake')}</button>`;
       div.querySelector('img').addEventListener('click', () => toggleSelect(i));
       div.querySelector('.retake-btn').addEventListener('click', (e) => {
         e.stopPropagation();
@@ -259,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
       grid.appendChild(div);
     });
     const hint = document.getElementById('selectHint');
-    hint.textContent = `${AppState.selectedIndices.length} / ${format.keep} sélectionnées`;
+    hint.textContent = t('select.hint', { count: AppState.selectedIndices.length, n: format.keep });
     document.getElementById('btnGoEdit').disabled = AppState.selectedIndices.length !== format.keep;
   }
 
@@ -313,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await Editor.share();
     } catch (e) {
-      if (e.name === 'AbortError') return; // fermeture volontaire du menu de partage
+      if (e.name === 'AbortError') return;
       console.error('share failed', e);
       Editor.download();
     }
@@ -352,5 +362,13 @@ document.addEventListener('DOMContentLoaded', () => {
     History.clear();
     History.render(document.getElementById('historyGrid'));
   });
+
+  // ---------- LANGUAGE ----------
+  window.onLangChange = () => {
+    if (AppState.step === 'screen-setup') renderSetupOptions();
+    if (AppState.step === 'screen-select') renderPhotoGrid();
+    if (AppState.step === 'screen-history') History.render(document.getElementById('historyGrid'));
+    if (lastConnState) setConnState(lastConnState);
+  };
 
 });
