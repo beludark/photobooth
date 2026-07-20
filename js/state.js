@@ -1,39 +1,40 @@
 // ---- Constants ----
 const FORMATS = [
-  { id: 'strip4', label: '4 poses (bande)', shots: 6, keep: 4, layout: 'strip' },
-  { id: 'strip3', label: '3 poses (bande)', shots: 5, keep: 3, layout: 'strip' },
-  { id: 'grid4',  label: '4 poses (grille)', shots: 6, keep: 4, layout: 'grid' },
+  { id: 'strip4', shots: 6, keep: 4, layout: 'strip' },
+  { id: 'strip3', shots: 5, keep: 3, layout: 'strip' },
+  { id: 'grid4',  shots: 6, keep: 4, layout: 'grid' },
 ];
 
 const FRAMES = [
-  { id: 'pink',     label: 'Rose',     color: '#FFC9DD' },
-  { id: 'mint',     label: 'Menthe',   color: '#BDEBD5' },
-  { id: 'lavender', label: 'Lavande',  color: '#DCD0F5' },
-  { id: 'yellow',   label: 'Beurre',   color: '#FFE9A8' },
-  { id: 'plum',     label: 'Prune',    color: '#3B2A46' },
-  { id: 'white',    label: 'Blanc',    color: '#FFFFFF' },
-  { id: 'sunset',   label: 'Coucher de soleil', gradient: ['#FFD3A5', '#FD6585'] },
-  { id: 'dreamy',   label: 'Rêverie',  gradient: ['#B8F1D9', '#DCD0F5'] },
-  { id: 'hearts',   label: 'Petits cœurs', pattern: 'hearts', color: '#FFF3F7' },
-  { id: 'polaroid', label: 'Polaroid', polaroid: true, color: '#FFFFFF' },
+  { id: 'pink',     color: '#FFC9DD' },
+  { id: 'mint',     color: '#BDEBD5' },
+  { id: 'lavender', color: '#DCD0F5' },
+  { id: 'yellow',   color: '#FFE9A8' },
+  { id: 'plum',     color: '#3B2A46' },
+  { id: 'white',    color: '#FFFFFF' },
+  { id: 'sunset',   gradient: ['#FFD3A5', '#FD6585'] },
+  { id: 'dreamy',   gradient: ['#B8F1D9', '#DCD0F5'] },
+  { id: 'hearts',   pattern: 'hearts', color: '#FFF3F7' },
+  { id: 'polaroid', polaroid: true, color: '#FFFFFF' },
 ];
 
 const FILTERS = [
-  { id: 'none',   label: 'Naturel', css: 'none' },
-  { id: 'bw',     label: 'Noir & blanc', css: 'grayscale(1) contrast(1.05)' },
-  { id: 'sepia',  label: 'Rétro', css: 'sepia(0.55) contrast(1.05) saturate(1.1)' },
-  { id: 'bright', label: 'Lumineux', css: 'brightness(1.12) saturate(1.2)' },
+  { id: 'none',   css: 'none' },
+  { id: 'bw',     css: 'grayscale(1) contrast(1.05)' },
+  { id: 'sepia',  css: 'sepia(0.55) contrast(1.05) saturate(1.1)' },
+  { id: 'bright', css: 'brightness(1.12) saturate(1.2)' },
 ];
 
 const COUNTDOWN_OPTIONS = [
-  { id: 'c3',  label: '3 s',  seconds: 3 },
-  { id: 'c5',  label: '5 s',  seconds: 5 },
-  { id: 'c10', label: '10 s', seconds: 10 },
+  { id: 'c3',  seconds: 3 },
+  { id: 'c5',  seconds: 5 },
+  { id: 'c10', seconds: 10 },
 ];
 
 const STICKER_EMOJIS = ['💗','✨','⭐','🌸','😊','😘','🎀','🐻','🍓','☁️','🔥','💫','🌈','🥰','👍','💌'];
 
 const REST_SECONDS = 3;
+const PREVIEW_MS = 1300;
 
 // ---- Mutable shared state ----
 const AppState = {
