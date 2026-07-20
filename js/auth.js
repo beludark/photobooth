@@ -21,14 +21,13 @@ function doLogin() {
   const email = loginEmail.value;
   const pass = loginPassword.value;
   if (!email.trim() || !pass) {
-    showLoginError("Entre l'identifiant et le mot de passe.");
+    showLoginError(t('login.errorEmpty'));
     return;
   }
   btnLogin.disabled = true;
   firebase.auth().signInWithEmailAndPassword(toAuthEmail(email), pass)
-    .catch(() => showLoginError('Identifiant ou mot de passe incorrect.'))
+    .catch(() => showLoginError(t('login.errorWrong')))
     .finally(() => { btnLogin.disabled = false; });
-}
 
 btnLogin.addEventListener('click', doLogin);
 loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
