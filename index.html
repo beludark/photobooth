@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>둘의 부스 — Photobooth à deux</title>
+<title>gab&서현's photobooth</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Poppins:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Poppins:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -13,25 +13,31 @@
 <div id="loginGate" class="login-gate">
   <div class="film-card login-card">
     <h1 class="hero-title">둘의 부스</h1>
-    <p class="hero-sub">Connecte-toi pour accéder à votre photobooth.</p>
-    <input id="loginEmail" class="input-code" placeholder="Identifiant" autocomplete="username" />
-    <input id="loginPassword" type="password" class="input-code" placeholder="Mot de passe" autocomplete="current-password" />
-    <button id="btnLogin" class="btn btn-primary">Se connecter</button>
+    <p class="brand-line">gab&서현's photobooth</p>
+    <p class="hero-sub" data-i18n="login.subtitle">Connecte-toi pour accéder à votre photobooth.</p>
+    <input id="loginEmail" class="input-code" data-i18n-placeholder="login.placeholderEmail" placeholder="Identifiant" autocomplete="username" />
+    <input id="loginPassword" type="password" class="input-code" data-i18n-placeholder="login.placeholderPassword" placeholder="Mot de passe" autocomplete="current-password" />
+    <button id="btnLogin" class="btn btn-primary" data-i18n="login.button">Se connecter</button>
     <p id="loginError" class="error-text hidden"></p>
+    <button class="btn btn-small lang-toggle">한국어</button>
   </div>
 </div>
 
 <div id="app" class="hidden">
 
   <header class="topbar">
-    <div class="logo">둘의 부스 <span class="logo-sub">two-cut booth</span></div>
+    <div class="logo-block">
+      <div class="logo">둘의 부스 <span class="logo-sub">two-cut booth</span></div>
+      <div class="brand-line">gab&서현's photobooth</div>
+    </div>
     <div class="topbar-right">
-      <button id="btnHistory" class="btn btn-small" title="Historique">📖 Historique</button>
+      <button class="btn btn-small lang-toggle">한국어</button>
+      <button id="btnHistory" class="btn btn-small" data-i18n="topbar.history" title="Historique">📖 Historique</button>
       <div id="connStatus" class="conn-badge hidden">
         <span id="connDot" class="conn-dot"></span>
         <span id="connText"></span>
       </div>
-      <button id="btnLogout" class="btn btn-small">Se déconnecter</button>
+      <button id="btnLogout" class="btn btn-small" data-i18n="topbar.logout">Se déconnecter</button>
     </div>
   </header>
 
@@ -40,21 +46,21 @@
     <!-- HOME -->
     <section id="screen-home" class="screen active">
       <div class="film-card">
-        <h1 class="hero-title">Prenez-vous en photo,<br>même à distance.</h1>
-        <p class="hero-sub">Crée une salle, envoie le lien à ta copine, souriez ensemble. Chaque salle est unique et limitée à deux personnes.</p>
+        <h1 class="hero-title" data-i18n="home.title">Prenez-vous en photo,<br>même à distance.</h1>
+        <p class="hero-sub" data-i18n="home.subtitle">Crée une salle, envoie le lien à ta copine, souriez ensemble. Chaque salle est unique et limitée à deux personnes.</p>
 
         <div class="home-actions">
           <div class="action-block">
-            <h2>Créer une salle</h2>
-            <p class="hint">Tu deviens l'hôte, tu lances la séance.</p>
-            <button id="btnCreateRoom" class="btn btn-primary">Créer ma salle</button>
+            <h2 data-i18n="home.createTitle">Créer une salle</h2>
+            <p class="hint" data-i18n="home.createHint">Tu deviens l'hôte, tu lances la séance.</p>
+            <button id="btnCreateRoom" class="btn btn-primary" data-i18n="home.createButton">Créer ma salle</button>
           </div>
-          <div class="divider-or">ou</div>
+          <div class="divider-or" data-i18n="home.or">ou</div>
           <div class="action-block">
-            <h2>Rejoindre une salle</h2>
-            <p class="hint">Colle le code reçu par ta moitié.</p>
-            <input id="joinCodeInput" class="input-code" placeholder="ex : LUNE-42" maxlength="12" />
-            <button id="btnJoinRoom" class="btn btn-secondary">Rejoindre</button>
+            <h2 data-i18n="home.joinTitle">Rejoindre une salle</h2>
+            <p class="hint" data-i18n="home.joinHint">Colle le code reçu par ta moitié.</p>
+            <input id="joinCodeInput" class="input-code" data-i18n-placeholder="home.joinPlaceholder" placeholder="ex : LUNE-42" maxlength="12" />
+            <button id="btnJoinRoom" class="btn btn-secondary" data-i18n="home.joinButton">Rejoindre</button>
           </div>
         </div>
         <p id="homeError" class="error-text hidden"></p>
@@ -64,57 +70,57 @@
     <!-- WAITING -->
     <section id="screen-waiting" class="screen">
       <div class="film-card">
-        <h2 class="section-title">Salle <span id="roomCodeDisplay" class="room-code"></span></h2>
-        <p class="hint">Partage ce lien avec ta copine :</p>
+        <h2 class="section-title"><span data-i18n="waiting.roomPrefix">Salle</span> <span id="roomCodeDisplay" class="room-code"></span></h2>
+        <p class="hint" data-i18n="waiting.shareHint">Partage ce lien avec ta copine :</p>
         <div class="share-row">
           <input id="shareLink" class="input-code" readonly />
-          <button id="btnCopyLink" class="btn btn-small">Copier</button>
+          <button id="btnCopyLink" class="btn btn-small" data-i18n="waiting.copy">Copier</button>
         </div>
 
         <div class="video-pair">
           <div class="video-slot">
             <video id="localVideo" autoplay playsinline muted></video>
-            <span class="video-label">Toi</span>
+            <span class="video-label" data-i18n="waiting.you">Toi</span>
           </div>
           <div class="video-slot">
             <video id="remoteVideo" autoplay playsinline></video>
-            <span id="remotePlaceholder" class="video-placeholder">En attente de connexion…</span>
-            <span class="video-label">Elle</span>
+            <span id="remotePlaceholder" class="video-placeholder" data-i18n="waiting.waitingPlaceholder">En attente de connexion…</span>
+            <span class="video-label" data-i18n="waiting.her">Elle</span>
           </div>
         </div>
 
-        <button id="btnGoSetup" class="btn btn-primary hidden">On y va →</button>
-        <p id="waitingHint" class="hint center">En attente que ta copine se connecte…</p>
+        <button id="btnGoSetup" class="btn btn-primary hidden" data-i18n="waiting.goButton">On y va →</button>
+        <p id="waitingHint" class="hint center" data-i18n="waiting.hintWaitingForHer">En attente que ta copine se connecte…</p>
       </div>
     </section>
 
     <!-- SETUP -->
     <section id="screen-setup" class="screen">
       <div class="film-card">
-        <h2 class="section-title">Choisissez votre format</h2>
+        <h2 class="section-title" data-i18n="setup.title">Choisissez votre format</h2>
 
         <div class="option-group">
-          <h3>Format de bande</h3>
+          <h3 data-i18n="setup.formatHeader">Format de bande</h3>
           <div id="formatOptions" class="option-row"></div>
         </div>
 
         <div class="option-group">
-          <h3>Couleur du cadre</h3>
+          <h3 data-i18n="setup.frameHeader">Couleur du cadre</h3>
           <div id="frameOptions" class="option-row"></div>
         </div>
 
         <div class="option-group">
-          <h3>Filtre</h3>
+          <h3 data-i18n="setup.filterHeader">Filtre</h3>
           <div id="filterOptions" class="option-row"></div>
         </div>
 
         <div class="option-group">
-          <h3>Décompte</h3>
+          <h3 data-i18n="setup.countdownHeader">Décompte</h3>
           <div id="countdownOptions" class="option-row"></div>
         </div>
 
-        <button id="btnStartSequence" class="btn btn-primary">Démarrer la séance 📸</button>
-        <p class="hint center">Les deux écrans se synchronisent automatiquement.</p>
+        <button id="btnStartSequence" class="btn btn-primary" data-i18n="setup.startButton">Démarrer la séance 📸</button>
+        <p class="hint center" data-i18n="setup.syncHint">Les deux écrans se synchronisent automatiquement.</p>
       </div>
     </section>
 
@@ -136,6 +142,9 @@
         <div id="restOverlay" class="rest-overlay hidden">
           <span id="restText">Préparez la prochaine pose…</span>
         </div>
+        <div id="previewOverlay" class="photo-preview-overlay hidden">
+          <img id="previewImg" alt="Photo qui vient d'être prise">
+        </div>
         <div id="flashOverlay" class="flash-overlay"></div>
       </div>
     </section>
@@ -143,34 +152,34 @@
     <!-- SELECT -->
     <section id="screen-select" class="screen">
       <div class="film-card">
-        <h2 class="section-title">Choisissez vos <span id="keepCountLabel"></span> préférées</h2>
+        <h2 class="section-title" id="selectTitle">Choisissez vos préférées</h2>
         <p class="hint center" id="selectHint"></p>
         <div id="photoGrid" class="photo-grid"></div>
-        <button id="btnGoEdit" class="btn btn-primary" disabled>Continuer →</button>
+        <button id="btnGoEdit" class="btn btn-primary" disabled data-i18n="select.continue">Continuer →</button>
       </div>
     </section>
 
     <!-- EDIT -->
     <section id="screen-edit" class="screen">
       <div class="film-card edit-card">
-        <h2 class="section-title">Décorez votre bande</h2>
+        <h2 class="section-title" data-i18n="edit.title">Décorez votre bande</h2>
         <div class="edit-layout">
           <div class="edit-canvas-wrap">
             <canvas id="finalCanvas"></canvas>
           </div>
           <div class="sticker-panel">
-            <h3>Message (optionnel)</h3>
-            <input id="stripTextInput" class="input-code" placeholder="Un petit mot..." maxlength="40" />
-            <h3>Stickers</h3>
+            <h3 data-i18n="edit.messageHeader">Message (optionnel)</h3>
+            <input id="stripTextInput" class="input-code" data-i18n-placeholder="edit.messagePlaceholder" placeholder="Un petit mot..." maxlength="40" />
+            <h3 data-i18n="edit.stickersHeader">Stickers</h3>
             <div id="stickerPalette" class="sticker-palette"></div>
-            <p class="hint">Clique un sticker puis clique sur la bande pour le poser. Glisse pour déplacer, molette pour redimensionner, double-clique pour retirer.</p>
-            <button id="btnClearStickers" class="btn btn-small">Tout effacer</button>
+            <p class="hint" data-i18n="edit.stickersHint">Clique un sticker puis clique sur la bande pour le poser.</p>
+            <button id="btnClearStickers" class="btn btn-small" data-i18n="edit.clearButton">Tout effacer</button>
           </div>
         </div>
         <div class="edit-actions">
-          <button id="btnRestart" class="btn btn-secondary">Nouvelle séance</button>
-          <button id="btnShare" class="btn btn-small hidden">Partager</button>
-          <button id="btnDownload" class="btn btn-primary">Télécharger 💾</button>
+          <button id="btnRestart" class="btn btn-secondary" data-i18n="edit.restartButton">Nouvelle séance</button>
+          <button id="btnShare" class="btn btn-small hidden" data-i18n="edit.shareButton">Partager</button>
+          <button id="btnDownload" class="btn btn-primary" data-i18n="edit.downloadButton">Télécharger 💾</button>
         </div>
       </div>
     </section>
@@ -178,12 +187,12 @@
     <!-- HISTORY -->
     <section id="screen-history" class="screen">
       <div class="film-card">
-        <h2 class="section-title">Vos bandes précédentes</h2>
-        <p class="hint center">Enregistrées uniquement dans ce navigateur, sur cet appareil.</p>
+        <h2 class="section-title" data-i18n="history.title">Vos bandes précédentes</h2>
+        <p class="hint center" data-i18n="history.subtitle">Enregistrées uniquement dans ce navigateur, sur cet appareil.</p>
         <div id="historyGrid" class="history-grid"></div>
         <div class="edit-actions">
-          <button id="btnHistoryClear" class="btn btn-small">Tout effacer</button>
-          <button id="btnHistoryBack" class="btn btn-primary">← Retour</button>
+          <button id="btnHistoryClear" class="btn btn-small" data-i18n="history.clearAll">Tout effacer</button>
+          <button id="btnHistoryBack" class="btn btn-primary" data-i18n="history.back">← Retour</button>
         </div>
       </div>
     </section>
@@ -198,6 +207,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/state.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/peer.js"></script>
 <script src="js/booth.js"></script>
 <script src="js/editor.js"></script>
