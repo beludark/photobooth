@@ -7,7 +7,6 @@ const Editor = {
   canvasW: 0,
   canvasH: 0,
   drag: null, // { index, offsetX, offsetY, moved, startX, startY }
-  _longPressTimer: null,
 
   init(canvasEl) {
     this.canvas = canvasEl;
@@ -17,7 +16,6 @@ const Editor = {
     canvasEl.addEventListener('pointermove', (e) => this._onPointerMove(e));
     canvasEl.addEventListener('pointerup', (e) => this._onPointerUp(e));
     canvasEl.addEventListener('pointercancel', (e) => this._onPointerUp(e));
-    canvasEl.addEventListener('dblclick', (e) => this._onDoubleClick(e));
     canvasEl.addEventListener('wheel', (e) => this._onWheel(e), { passive: false });
   },
 
@@ -209,17 +207,6 @@ const Editor = {
         moved: false, startX: x, startY: y,
       };
       this.canvas.setPointerCapture(e.pointerId);
-      // long-press (~550ms) without moving deletes the sticker — a mobile-friendly
-      // alternative to double-click, which doesn't fire reliably on touch.
-      clearTimeout(this._longPressTimer);
-      this._longPressTimer = setTimeout(() => {
-        if (this.drag && !this.drag.moved) {
-          AppState.stickers.splice(this.drag.index, 1);
-          this.drag = null;
-          this._broadcastStickers();
-          this.redraw();
-        }
-      }, 550);
       return;
     }
     if (this.selectedEmoji) {
@@ -234,7 +221,6 @@ const Editor = {
     const { x, y } = this._pointerPos(e);
     if (Math.hypot(x - this.drag.startX, y - this.drag.startY) > 6) {
       this.drag.moved = true;
-      clearTimeout(this._longPressTimer);
     }
     const st = AppState.stickers[this.drag.index];
     if (!st) return;
@@ -244,21 +230,14 @@ const Editor = {
   },
 
   _onPointerUp() {
-    clearTimeout(this._longPressTimer);
-    if (this.drag) {
-      this.drag = null;
-      this._broadcastStickers();
+    if (!this.drag) return;
+    if (!this.drag.moved) {
+      // a plain tap (no drag) on a sticker removes it
+      AppState.stickers.splice(this.drag.index, 1);
     }
-  },
-
-  _onDoubleClick(e) {
-    const { x, y } = this._pointerPos(e);
-    const hit = this._hitSticker(x, y);
-    if (hit !== -1) {
-      AppState.stickers.splice(hit, 1);
-      this._broadcastStickers();
-      this.redraw();
-    }
+    this.drag = null;
+    this._broadcastStickers();
+    this.redraw();
   },
 
   _onWheel(e) {
