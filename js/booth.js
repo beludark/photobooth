@@ -16,6 +16,7 @@ const Booth = {
   onRest: null,       // (secondsLeft | null) => void
   onFlash: null,      // () => void
   onPhoto: null,      // (index, dataUrl) => void
+  onPreview: null,    // (dataUrl) => void — show the just-taken photo briefly
   onDone: null,       // () => void
 
   init({ localVideoEl, remoteVideoEl }) {
@@ -114,6 +115,8 @@ const Booth = {
       this._localFlash();
       PeerNet.send({ type: 'photo', index: i, dataUrl });
       if (this.onPhoto) this.onPhoto(i, dataUrl);
+      if (this.onPreview) this.onPreview(dataUrl);
+      await this.sleep(PREVIEW_MS);
 
       if (i < format.shots - 1) await this._restPhase();
     }
@@ -140,6 +143,8 @@ const Booth = {
     this._localFlash();
     PeerNet.send({ type: 'photo', index, dataUrl });
     if (this.onPhoto) this.onPhoto(index, dataUrl);
+    if (this.onPreview) this.onPreview(dataUrl);
+    await this.sleep(PREVIEW_MS);
 
     AppState.captureInProgress = false;
     PeerNet.send({ type: 'sequence-done' });
@@ -200,6 +205,7 @@ const Booth = {
         AppState.photos[msg.index] = msg.dataUrl;
         if (this.onProgress) this.onProgress(msg.index, currentFormat().shots, false);
         if (this.onPhoto) this.onPhoto(msg.index, msg.dataUrl);
+        if (this.onPreview) this.onPreview(msg.dataUrl);
         break;
       case 'rest':
         if (this.onRest) this.onRest(msg.s);
