@@ -28,7 +28,7 @@ function doLogin() {
   firebase.auth().signInWithEmailAndPassword(toAuthEmail(email), pass)
     .catch(() => showLoginError(t('login.errorWrong')))
     .finally(() => { btnLogin.disabled = false; });
-
+}
 btnLogin.addEventListener('click', doLogin);
 loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
 loginEmail.addEventListener('keydown', (e) => { if (e.key === 'Enter') loginPassword.focus(); });
